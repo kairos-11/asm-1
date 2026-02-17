@@ -4,6 +4,10 @@ section .data
   c dd 2
   d dw 3
   e dd -1
+
+section .bss
+  res resq 1
+
 global _start
 
 ; b * c + a / (d + e) - d*d / b * e + a * e
@@ -14,23 +18,22 @@ global _start
 
 section .text
 _start:
-  cmp word [b], 0
-  je div_zero
-  ; checked b zero
-
   movsx rax, word [b]
+  test rax, rax
+  jz div_zero
+  ; checked b zero
   movsxd rcx, dword [c]
   imul rax, rcx
 
   mov r8, rax
   ; r8 holds b * c
 
-  cmp dword [e], 0
-  je div_zero
-  ; checked e zero
 
-  movsxd rax, dword [a]
   movsxd rcx, dword [e]
+  test rcx, rcx
+  jz div_zero
+  ; checked e zero
+  movsxd rax, dword [a]
   imul rax, rcx
 
   mov r9, rax
@@ -39,8 +42,8 @@ _start:
   movsx rbx, word [d]
   movsxd rcx, dword [e]
   add rbx, rcx
-  cmp rbx, 0
-  je div_zero
+  test rbx, rbx
+  jz div_zero
   ; checked d + e zero
   ; rbx = d + e
   
@@ -70,9 +73,11 @@ _start:
   add rax, r9
   add rax, r10
   sub rax, r11
+
+  mov [res], rax
   
-  mov rdi, rax
   mov rax, 60
+  xor rdi, rdi
   syscall
 
 div_zero:
