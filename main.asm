@@ -14,6 +14,7 @@ global _start
 ; d + e == 0 => exit 1
 ; b == 0 => exit 1
 ; e == 0 => exit 1
+; overflow => exit 2
 ; exit 0
 
 section .text
@@ -22,9 +23,11 @@ _start:
   test rax, rax
   jz div_zero
   ; checked b zero
+
   movsxd rcx, dword [c]
   imul rax, rcx
-
+  jo overflow
+  ; checked ovf
   mov r8, rax
   ; r8 holds b * c
 
@@ -35,13 +38,16 @@ _start:
   ; checked e zero
   movsxd rax, dword [a]
   imul rax, rcx
-
+  jo overflow
+  ; checked ovf
   mov r9, rax
   ; r9 holds a * e
 
   movsx rbx, word [d]
   movsxd rcx, dword [e]
   add rbx, rcx
+  jo overflow
+  ; checked ovf
   test rbx, rbx
   jz div_zero
   ; checked d + e zero
@@ -58,6 +64,8 @@ _start:
   movsx rbx, word [b]
   movsxd rcx, dword [e]
   imul rbx, rcx
+  jo overflow
+  ; checked ovf
   ; rbx = b * e
   movsx rax, word [d]
   imul rax, rax
@@ -71,8 +79,13 @@ _start:
 
   mov rax, r8
   add rax, r9
+  jo overflow
   add rax, r10
+  jo overflow
   sub rax, r11
+  jo overflow
+
+  ; checked ovf
 
   mov [res], rax
   
@@ -85,3 +98,7 @@ div_zero:
   mov edi, 1
   syscall
 
+overflow:
+  mov rax, 60
+  mov edi, 2
+  syscall
